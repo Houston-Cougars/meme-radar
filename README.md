@@ -1,5 +1,16 @@
 # Meme Radar V4
 
+## Free local mode (default)
+
+Run `./Run-Local.ps1` on Windows with Python 3.12+ installed. It creates a local virtual environment and copies the blank-secret configuration to `.env`. SQLite history stays in `meme_radar.db` and reports stay in `reports/`. No Render account, hosted Postgres, Apify token, or X account is required.
+
+Default live sources are public Reddit RSS/Atom feeds from r/memes and r/dankmemes. Configure other public feeds with `RSS_FEEDS`. Feed access can be blocked or rate limited and has not been verified live. RSS provides titles, authors, links, and dates but no reliable engagement metrics; V4 engagement and cross-platform breakout scoring is limited in this mode. This does not reproduce TikTok/Instagram discovery. If all feeds fail, the run fails instead of substituting demo posts.
+
+Keep `ALLOW_PAID_PROVIDERS=false` to prevent Apify and X from running even when credentials are present. Set `USE_DEMO_DATA=true` only for synthetic testing. Discord remains optional through a webhook in `.env`.
+
+Run `python run_daemon.py` from the activated virtual environment to repeat hourly while your computer is awake. Local electricity and internet usage still apply. No scheduled task has been installed. Render configuration below is retained as an optional paid hosting alternative, not the default.
+
+
 Hourly meme discovery using TikTok and Instagram via Apify, optional X recent search, text clustering, social scoring, DEX Screener checks, and Discord delivery. Postgres retains post observations and candidate scores/ranks across Render runs. SQLite remains available for local use.
 
 ## Local setup (Python 3.12+)
@@ -13,7 +24,7 @@ Copy-Item .env.example .env
 
 For a first run without provider credentials, set `USE_DEMO_DATA=true` in `.env`, then run `python run_once.py`. Leave both Discord URLs blank to avoid delivery. Markdown and JSON reports are written to `reports/`, including `latest.md`. The demo still makes public DEX Screener requests; tests mock external requests.
 
-For live collection, set `USE_DEMO_DATA=false` and supply `APIFY_TOKEN` in your local `.env` or hosting secret environment. Both Apify adapters are enabled by default. Their actor IDs and search terms are configurable in `.env.example`. Start with `SOCIAL_RESULTS_PER_QUERY=25`: every term starts a separate actor run, and Apify charges for collection. Instagram searches hashtags; TikTok searches keywords. Actor output and search coverage can vary over time.
+For optional Apify collection, set `ALLOW_PAID_PROVIDERS=true` and `USE_DEMO_DATA=false` and supply `APIFY_TOKEN` in your local `.env` or hosting secret environment. Both Apify adapters are enabled by default. Their actor IDs and search terms are configurable in `.env.example`. Start with `SOCIAL_RESULTS_PER_QUERY=25`: every term starts a separate actor run, and Apify charges for collection. Instagram searches hashtags; TikTok searches keywords. Actor output and search coverage can vary over time.
 
 Set `DISCORD_WEBHOOK_URL` for the hourly digest. Set `DISCORD_ALERT_WEBHOOK_URL` for a separate breakout channel, or leave it blank to reuse the digest channel. `X_BEARER_TOKEN` is optional and requires X API recent-search access. Never commit `.env` or credentials.
 

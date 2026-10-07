@@ -10,6 +10,8 @@ from meme_radar.collectors.apify_base import ApifyActorCollector
 from meme_radar.collectors.tiktok_apify import TikTokApifyCollector
 from meme_radar.collectors.instagram_apify import InstagramApifyCollector
 from meme_radar.collectors.x_api import XCollector
+from meme_radar.collectors.rss import RSSCollector
+from meme_radar.collectors.factory import build_collectors
 from meme_radar.db import connect, save_posts, save_candidate_snapshots, load_previous_candidate
 from meme_radar.models import SocialPost, MemeCandidate
 from meme_radar.pipeline import run_pipeline
@@ -25,6 +27,20 @@ def candidate(key):
 
 
 class AdapterTests(unittest.IsolatedAsyncioTestCase):
+    async def test_free_feed_atom_normalization(self):
+        xml = '<feed xmlns="http://www.w3.org/2005/Atom"><entry><id>post1</id><title>Jean Phil meme</title><link href="https://example.org/post1"/><updated>2026-10-07T12:00:00Z</updated><author><name>creator</name></author></entry></feed>'
+        client = AsyncMock()
+        client.get.return_value = httpx.Response(200, content=xml, request=httpx.Request('GET', 'https://example.org/feed'))
+        with patch.dict(os.environ, {'RSS_FEEDS': '["https://example.org/feed"]'}), patch('meme_radar.collectors.rss.httpx.AsyncClient') as factory:
+            factory.return_value.__aenter__.return_value = client
+            posts = await RSSCollector().collect()
+        self.assertEqual((posts[0].post_id, posts[0].platform, posts[0].author_id), ('post1', 'rss', 'creator'))
+        self.assertEqual(posts[0].views, 0)
+
+    async def test_paid_credentials_do_not_enable_paid_sources(self):
+        with patch.dict(os.environ, {'USE_DEMO_DATA': 'false', 'RSS_ENABLED': 'true', 'ALLOW_PAID_PROVIDERS': 'false', 'APIFY_TOKEN': 'test-only', 'X_BEARER_TOKEN': 'test-only'}):
+            self.assertEqual([type(c).__name__ for c in build_collectors()], ['RSSCollector'])
+
     async def test_apify_uses_header_and_returns_dataset(self):
         client = AsyncMock()
         client.post.return_value = httpx.Response(200, json=[{'id': '1'}], request=httpx.Request('POST', 'https://api.apify.com'))
