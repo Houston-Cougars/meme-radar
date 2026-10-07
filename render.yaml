@@ -1,0 +1,49 @@
+services:
+  - type: cron
+    name: meme-radar-hourly
+    runtime: docker
+    region: oregon
+    plan: 0.5c-512mb
+    schedule: "0 * * * *"
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: python run_once.py
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: meme-radar-postgres
+          property: connectionString
+      - key: APIFY_TOKEN
+        sync: false
+      - key: X_BEARER_TOKEN
+        sync: false
+      - key: DISCORD_WEBHOOK_URL
+        sync: false
+      - key: DISCORD_ALERT_WEBHOOK_URL
+        sync: false
+      - key: USE_DEMO_DATA
+        value: "false"
+      - key: SOCIAL_RESULTS_PER_QUERY
+        value: "25"
+      - key: TIKTOK_PROVIDER
+        value: apify
+      - key: INSTAGRAM_PROVIDER
+        value: apify
+      - key: APIFY_TIKTOK_ACTOR
+        value: clockworks~tiktok-scraper
+      - key: APIFY_INSTAGRAM_ACTOR
+        value: apify~instagram-api-scraper
+      - key: TIKTOK_SEARCH_TERMS
+        value: '["viral","meme","who is this","what is this"]'
+      - key: INSTAGRAM_SEARCH_TERMS
+        value: '["viral","meme"]'
+      - key: APIFY_TIMEOUT_SECONDS
+        value: "180"
+
+databases:
+  - name: meme-radar-postgres
+    databaseName: meme_radar
+    user: meme_radar
+    region: oregon
+    plan: free
+    ipAllowList: []
