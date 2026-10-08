@@ -1,5 +1,10 @@
 # Meme Radar V4
 
+## Windows desktop app
+
+Run MemeRadar.exe for a full-screen dashboard with automatic public-feed collection, local SQLite history, headline filtering, news searches, source links, and source/interval settings. No Python installation is required for the packaged executable. Data lives in MemeRadar-data beside the executable. The app collects while open; F11 toggles full screen and Escape leaves full screen. Desktop mode never uses paid providers or hosted Postgres. Feed availability and RSS scoring limitations still apply. Build from source with Build-Windows.ps1.
+
+
 ## Free local mode (default)
 
 Run `./Run-Local.ps1` on Windows with Python 3.12+ installed. It creates a local virtual environment and copies the blank-secret configuration to `.env`. SQLite history stays in `meme_radar.db` and reports stay in `reports/`. No Render account, hosted Postgres, Apify token, or X account is required.

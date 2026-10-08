@@ -15,6 +15,7 @@ class RSSCollector(Collector):
 
     async def collect(self):
         posts = []
+        self.feed_results = []
         successes = 0
         async with httpx.AsyncClient(timeout=30, follow_redirects=True, headers={'User-Agent': 'MemeRadar/4.0 public-feed-reader'}) as client:
             for url in self.urls:
@@ -23,6 +24,7 @@ class RSSCollector(Collector):
                     response.raise_for_status()
                     root = ET.fromstring(response.content)
                     successes += 1
+                    self.feed_results.append({'url': url, 'ok': True})
                     atom = '{http://www.w3.org/2005/Atom}'
                     entries = root.findall(f'{atom}entry') or root.findall('./channel/item')
                     for entry in entries[:25]:
@@ -41,6 +43,7 @@ class RSSCollector(Collector):
                         if pid:
                             posts.append(SocialPost('rss', pid, created, author or pid, author, title, link))
                 except (httpx.HTTPError, ET.ParseError, ValueError) as exc:
+                    self.feed_results.append({'url': url, 'ok': False, 'error': type(exc).__name__})
                     print(f'RSS feed unavailable: {type(exc).__name__}')
         if not successes:
             raise RuntimeError('No public feeds accessible. Configure RSS_FEEDS with accessible public RSS/Atom URLs.')
